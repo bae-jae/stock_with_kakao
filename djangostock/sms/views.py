@@ -5,7 +5,9 @@ import os
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+
 from sms.login import KakaoLogin
+from util.crawling import NaverStockCrawling
 
 REST_KEY = os.environ.get("REST_KEY")
 REDIRECT_URI = os.environ.get("REDIRECT_URI")
@@ -38,9 +40,17 @@ class KakaoAPI(APIView):
 
         if not auth:
              Response("Can't get auth code", status.HTTP_400_BAD_REQUEST)
-
         token = self._get_token(auth)
-        self.send_SMS_to_me(token, "나에게")
+
+        stock = NaverStockCrawling()
+        stock_page_source = stock.load_page_source(stock.URL)
+        upper_limits = stock.get_upper_limit_today(stock_page_source)
+
+        stock.web.teardown()
+
+        text = "\n".join(upper_limits)
+
+        self.send_SMS_to_me(token, stock.URL, text)
 
         return Response(token, status.HTTP_200_OK)
 
@@ -66,7 +76,7 @@ class KakaoAPI(APIView):
         
         return tokens['access_token']
     
-    def send_SMS_to_me(self, access_token, text):
+    def send_SMS_to_me(self, access_token, url, text):
         """text변수에 나에게 보낼 내용을 입력하면 나에게 메세지가 전송 됨
             POST /v2/api/talk/memo/default/send HTTP/1.1
             Host: kapi.kakao.com
@@ -84,45 +94,10 @@ class KakaoAPI(APIView):
             "object_type" : "text",
             "text": text,
             "link": {
-                "web_url":"www.daum.net"
+                "web_url": url
                 }
             })
         }
 
         response = requests.post(url, headers=headers, data=data)
         return Response(response.status_code, response.status_code,)
-        
-
-    def send_SMS(self, friends, text, token):
-        """
-        POST /v1/api/talk/friends/message/default/send HTTP/1.1
-        Host: kapi.kakao.com
-        Authorization: Bearer ${ACCESS_TOKEN}
-
-        Args:
-            uuid_list (_type_): _description_
-        """
-
-        # send_url = "https://kapi.kakao.com/v1/api/talk/friends/message/default/send"
-        send_url = "https://kapi.kakao.com/v1/api/talk/friends/message/default/send"
-        headers = {"Authorization": "Bearer " + token}
-        for friend in friends['elements']:
-            receiver_uuids = friend['uuid']
-            print("uuid는", receiver_uuids)
-            data = {
-                'receiver_uuids': '["{}"]'.format(receiver_uuids),
-                "template_object":
-                    json.dumps({
-                        "object_type": "text",
-                        "text": text,
-                        "link": {
-                            "web_url":"www.daum.net",
-                            "web_url":"www.naver.com"
-                        },
-                        "button_title": "바로 확인"
-                    })
-            }
-
-            response = requests.post(send_url, headers=headers, data=data)
-
-        return Response(response.status_code, status.HTTP_200_OK)
