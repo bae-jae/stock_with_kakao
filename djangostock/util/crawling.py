@@ -1,17 +1,17 @@
 from bs4 import BeautifulSoup
-from webpage_load import Selenium
+from .webpage_load import Selenium
 
 class NaverStockCrawling():
     URL = "https://finance.naver.com/sise/"
 
     def __init__(self) -> None:
+        self.web = Selenium()
         print("Created NaverStockCrawling")
 
     def load_page_source(self, URL):
-        web = Selenium()
-        web.set_page(URL)
+        self.web.set_page(URL)
 
-        return web.driver.page_source
+        return self.web.driver.page_source
 
     def get_upper_limit_today(self, page_source):
         html = BeautifulSoup(page_source, 'html.parser')

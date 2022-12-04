@@ -1,4 +1,4 @@
-from util.scraping import Selenium
+from util.webpage_load import Selenium
 
 import time
 import random
