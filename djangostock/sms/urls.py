@@ -15,8 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from sms.views import OAuth,KakaoAPI
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('sms/', include('sms.urls'))
+    path('oauth/', OAuth.as_view()),
+    path('sms-me/', KakaoAPI.as_view()),
 ]
