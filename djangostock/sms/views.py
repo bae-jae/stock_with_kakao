@@ -43,14 +43,20 @@ class KakaoAPI(APIView):
         token = self._get_token(auth)
 
         stock = NaverStockCrawling()
-        stock_page_source = stock.load_page_source(stock.URL)
-        upper_limits = stock.get_upper_limit_today(stock_page_source)
-
+        upper_limits = stock.get_upper_limit_today()
+        thema_in_stock, stock_to_thema = stock.get_stock_in_thema()
         stock.web.teardown()
 
-        text = "\n".join(upper_limits)
+        for upper_stocks in upper_limits:
+            thema_of_upper_stocks = stock_to_thema.get(upper_stocks, [])
 
-        self.send_SMS_to_me(token, stock.URL, text)
+            if thema_of_upper_stocks:
+                print(thema_of_upper_stocks.split('\n'))
+                for thema in thema_of_upper_stocks.split('\n'):
+                    cand_stocks = thema_in_stock.get(thema, [])
+
+                    if cand_stocks:
+                        self.send_SMS_to_me(token, "www.naver.com", upper_stocks + "\n" + thema + "\n" + str(cand_stocks))
 
         return Response(token, status.HTTP_200_OK)
 
