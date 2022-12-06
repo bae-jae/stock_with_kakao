@@ -31,6 +31,12 @@ class NaverStockCrawling():
         return names
 
     def get_stock_in_thema(self):
+        """네이버의 테마 리스트 있는 정보를 크롤링한다
+
+        Returns:
+            thema_in_stock: 테마를 입력하면 테마에 속해있는 종목을 알 수 있다.
+            stock_to_thema: 종목을 입력하면 종목이 속한 테마를 알려준다
+        """
         thema_in_stock = {}
         stock_to_thema = {}
 
