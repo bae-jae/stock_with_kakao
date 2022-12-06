@@ -8,6 +8,8 @@ from rest_framework import status
 
 from sms.login import KakaoLogin
 from util.crawling import NaverStockCrawling
+from stocks.dataOpen import KoreaDataAPI
+from util import handling
 
 REST_KEY = os.environ.get("REST_KEY")
 REDIRECT_URI = os.environ.get("REDIRECT_URI")
@@ -46,14 +48,14 @@ class KakaoAPI(APIView):
         upper_limits = stock.get_upper_limit_today()
         thema_in_stock, stock_to_thema = stock.get_stock_in_thema()
         stock.web.teardown()
-
+        
         for upper_stocks in upper_limits:
             thema_of_upper_stocks = stock_to_thema.get(upper_stocks, [])
 
             if thema_of_upper_stocks:
-                print(thema_of_upper_stocks.split('\n'))
                 for thema in thema_of_upper_stocks.split('\n'):
                     cand_stocks = thema_in_stock.get(thema, [])
+                    cand_stocks = handling.sorted_stock_by_stock_cap(cand_stocks)
 
                     if cand_stocks:
                         self.send_SMS_to_me(token, "www.naver.com", upper_stocks + "\n" + thema + "\n" + str(cand_stocks))
