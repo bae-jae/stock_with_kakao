@@ -25,7 +25,7 @@ class Selenium:
     def set_options(self):
         self.options.add_experimental_option("detach", True)
         self.options.add_argument("--ignore-certificate-errors")
-        # self.options.add_argument("--headless")
+        self.options.add_argument("--headless")
         self.options.add_argument('--no-sandbox')
         self.options.add_argument('--disable-dev-shm-usage')
         self.options.add_argument('--disable-gpu')

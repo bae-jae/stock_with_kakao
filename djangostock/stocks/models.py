@@ -6,3 +6,10 @@ class StockInfo(models.Model):
 
     def __str__(self) -> str:
         return  self.stock_name
+
+class ThemaInfo(models.Model):
+    thema_name = models.CharField(primary_key=True, max_length=100)
+    stocks = models.CharField(max_length=500)
+
+    def __str__(self) -> str:
+        return  self.thema_name

@@ -134,5 +134,6 @@ STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CRONJOBS = [
-    ('31 15 * * *', 'crons.cron.send_upper_limit_cron', '>> ' + os.path.join(BASE_DIR, 'logs/upper_limit_log.txt')+ ' 2>&1 ')
+    ('31 15 * * *', 'crons.cron.send_upper_limit_cron', '>> ' + os.path.join(BASE_DIR, 'logs/upper_limit_log.txt')+ ' 2>&1 '),
+    ('55 8 * * *', 'crons.cron.store_stock_info_in_DB', '>> ' + os.path.join(BASE_DIR, 'logs/store_db_log.txt')+ ' 2>&1 ')
 ]
