@@ -16,16 +16,9 @@ import environ, os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env = environ.Env(DEBUG=(bool, True))
-
-'''
-3. 환경변수를 읽어올 준비는 마쳤고, 어떤 파일에서 불러올건지 정해줘야 하기 때문에
-나는 '.env'에서 가져올거라고 설정해줬다.
-'''
 environ.Env.read_env(
     env_file=os.path.join(BASE_DIR, '.env')
 )
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -48,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crontab',
     'rest_framework',
     'stocks',
     'sms',
@@ -138,3 +132,7 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CRONJOBS = [
+    ('31 15 * * *', 'crons.cron.send_upper_limit_cron', '>> ' + os.path.join(BASE_DIR, 'logs/upper_limit_log.txt')+ ' 2>&1 ')
+]
