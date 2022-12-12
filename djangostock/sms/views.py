@@ -1,6 +1,7 @@
 import requests
 import json
 import os
+import threading
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,6 +11,8 @@ from sms.login import KakaoLogin
 from util.crawling import NaverStockCrawling
 from stocks.dataOpen import KoreaDataAPI
 from util import handling
+from stocks.models import StockInfo, ThemaInfo
+
 
 REST_KEY = os.environ.get("REST_KEY")
 REDIRECT_URI = os.environ.get("REDIRECT_URI")
@@ -46,20 +49,11 @@ class KakaoAPI(APIView):
 
         stock = NaverStockCrawling()
         upper_limits = stock.get_upper_limit_today()
-        thema_in_stock, stock_to_thema = stock.get_stock_in_thema()
         stock.web.teardown()
+
+        t = threading.Thread(target=self.send_sms_in_background, args=(token, upper_limits))
+        t.start()
         
-        for upper_stocks in upper_limits:
-            thema_of_upper_stocks = stock_to_thema.get(upper_stocks, [])
-
-            if thema_of_upper_stocks:
-                for thema in thema_of_upper_stocks.split('\n'):
-                    cand_stocks = thema_in_stock.get(thema, [])
-                    cand_stocks = handling.sorted_stock_by_stock_cap(cand_stocks)
-
-                    if cand_stocks:
-                        self.send_SMS_to_me(token, "www.naver.com", upper_stocks + "\n" + thema + "\n" + str(cand_stocks))
-
         return Response(token, status.HTTP_200_OK)
 
     def _get_token(self, authentication):
@@ -84,7 +78,33 @@ class KakaoAPI(APIView):
         
         return tokens['access_token']
     
-    def send_SMS_to_me(self, access_token, url, text):
+    def send_sms_in_background(self, token, upper_limits):
+        """상한가와 관련된 주식 목록을 DB에서 가져와 카카오톡으로 전송한다.
+
+        Args:
+            token (_type_): 카카오톡에서 발급받은 토크
+            upper_limits (_type_): 당일 상한가 목록
+        """
+        
+        for upper_stocks in upper_limits:
+            stock_info_of_upeer_stock = StockInfo.objects.filter(stock_name=upper_stocks)
+            
+            if stock_info_of_upeer_stock.exists():
+                stock_info_of_upeer_stock = stock_info_of_upeer_stock.first()
+            else:
+                print("존재하지 않는 이름은 ", upper_stocks)
+                continue
+
+            if stock_info_of_upeer_stock.themas:
+                for thema in stock_info_of_upeer_stock.themas.split(','):
+                    cand_stocks = ThemaInfo.objects.get(thema_name=thema).stocks.split(',')
+                    cand_stocks = handling.sorted_stock_by_stock_cap(cand_stocks)
+
+                    if cand_stocks:
+                        self._send_SMS_to_me(token, "www.naver.com", upper_stocks + "\n" + thema + "\n" + str(cand_stocks))
+
+    
+    def _send_SMS_to_me(self, access_token, url, text):
         """text변수에 나에게 보낼 내용을 입력하면 나에게 메세지가 전송 됨
             POST /v2/api/talk/memo/default/send HTTP/1.1
             Host: kapi.kakao.com

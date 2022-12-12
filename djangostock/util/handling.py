@@ -1,3 +1,5 @@
+import time
+
 from stocks.dataOpen import KoreaDataAPI
 
 def sorted_stock_by_stock_cap(stocks):
@@ -9,6 +11,8 @@ def sorted_stock_by_stock_cap(stocks):
 
         if stock_cap:
             result.append([float(stock_cap), stock])
+        
+        time.sleep(0.2)
 
     result.sort()
 
