@@ -1,6 +1,6 @@
-import xmltodict
 import requests
 import json
+import xmltodict
 
 
 class KoreaDataAPI:
@@ -25,8 +25,12 @@ class KoreaDataAPI:
         res = requests.get(url, verify=False)
         res = xmltodict.parse(res.content)
 
-        stock_info = res['response']['body']['items']['item']
-        print("찾아온 주식 정보", res['response']['body']['items']['item'])
+        stock_info = {}
+
+        try:
+            stock_info = res['response']['body']['items']['item']
+        except Exception as e:
+            print(e, stock_name)
 
         return stock_info
 
