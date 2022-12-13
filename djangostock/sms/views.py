@@ -97,7 +97,13 @@ class KakaoAPI(APIView):
 
             if stock_info_of_upeer_stock.themas:
                 for thema in stock_info_of_upeer_stock.themas.split(','):
-                    cand_stocks = ThemaInfo.objects.get(thema_name=thema).stocks.split(',')
+                    cand_stocks = ThemaInfo.objects.filter(thema_name=thema)
+                    
+                    if not cand_stocks.exists():
+                        print("존재하지 않는 이름은 ", thema)
+                        continue
+                    
+                    cand_stocks = cand_stocks.first().stocks.split(',')
                     cand_stocks = handling.sorted_stock_by_stock_cap(cand_stocks)
 
                     if cand_stocks:
